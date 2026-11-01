@@ -1,0 +1,38 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+issueTrackerURL = "https://github.com/Rick007110/create-display-link-plus/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "Rick007110"
+logoFile = "icon.png"
+displayURL = "https://github.com/Rick007110/create-display-link-plus"
+description = '''${mod_description}'''
+
+[[mixins]]
+config = "${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# Mixins target Create 6.0.x internals; newer major versions may move things around.
+[[dependencies.${mod_id}]]
+modId = "create"
+type = "required"
+versionRange = "${create_version_range}"
+ordering = "AFTER"
+side = "BOTH"

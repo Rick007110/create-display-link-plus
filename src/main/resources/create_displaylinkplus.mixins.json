@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.rick007110.displaylinkplus.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DisplayLinkBlockEntityMixin",
+    "DisplayLinkBlockMixin",
+    "SingleLineDisplaySourceMixin",
+    "DisplayTargetMixin",
+    "ValueListDisplaySourceMixin",
+    "FluidListDisplaySourceMixin",
+    "DisplayLinkClipboardMixin"
+  ],
+  "client": [
+    "client.DisplayLinkScreenMixin",
+    "client.SingleLineDisplaySourceClientMixin",
+    "client.ValueListConfigMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

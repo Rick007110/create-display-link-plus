@@ -1,0 +1,118 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    maven {
+        name = 'Create'
+        url = 'https://maven.createmod.net'
+        content { includeGroupAndSubgroups 'com.simibubi.create' }
+    }
+}
+
+// The full Create jar from Create's Maven. Its jar-in-jar libraries (Flywheel, Ponder/Catnip, Registrate) are
+// unpacked for compiling; at runtime the jar is installed in run/mods so FML loads it like a normal install.
+configurations {
+    createMod { transitive = false }
+    compileOnly.extendsFrom createMod
+}
+
+def createLibs = layout.buildDirectory.dir('createLibs')
+tasks.register('extractCreateLibs', Copy) {
+    from({ zipTree(configurations.createMod.singleFile) }) {
+        include 'META-INF/jarjar/*.jar'
+        eachFile { path = name }
+    }
+    includeEmptyDirs = false
+    into createLibs
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    createMod "com.simibubi.create:create-1.21.1:${create_version}"
+    compileOnly fileTree(createLibs) {
+        include '*.jar'
+        builtBy 'extractCreateLibs'
+    }
+}
+
+tasks.register('copyRunMods', Copy) {
+    from configurations.createMod
+    into file('run/mods')
+}
+tasks.matching { it.name.startsWith('prepare') && it.name.endsWith('Run') }.configureEach {
+    dependsOn 'copyRunMods'
+}
+
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            create_version_range   : create_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_description        : mod_description,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
